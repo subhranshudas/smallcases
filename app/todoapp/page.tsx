@@ -1,42 +1,34 @@
 "use client"
 
-import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import React from 'react'
-
-
-interface TodoInterface {
-    label: string
-    completed: boolean
-    updatedAt: Date | null
-}
-
-const defaultTodo = { label: '', completed: false, updatedAt: null }
+import TodoForm, { TodoInterface } from './todo-form'
+import TodoStats from './todo-stats'
+import TodoList from './todo-list'
 
 
 export default function TodoApp() {
-    const [todo, setTodo] = React.useState<TodoInterface>({...defaultTodo})
     const [todos, setTodos] = React.useState<TodoInterface[]>([]) 
 
-
-    const onTodoChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
-        setTodo({ ...todo, label: evt.target.value})
+    const onTodoSubmit = (newTodo: TodoInterface) => {
+          setTodos([...todos, newTodo])
     }
 
-    const onTodoSubmit = (evt: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-        evt.preventDefault()
+    const onTodoTicked = (checked: boolean, todoTicked: TodoInterface) => {    
+        const newTodos = todos.map((td) => {
+            if (todoTicked.id === td.id) {
+                return {...td, completed: checked}
+            }
+            return td
+        })
 
-        setTodos([...todos, { ...todo, updatedAt: new Date() }])
-        setTodo({...defaultTodo})
+        setTodos(newTodos)
     }
 
-    const onTodoTicked = (evt: React.FormEvent<HTMLButtonElement>) => {
-
+    const onTodoDelete = (todoDeleted: TodoInterface) => {
+        const newTodos = todos.filter((td) => todoDeleted.id !== td.id)
+        setTodos(newTodos)
     }
 
-    const completedTodos = 0
 
     return (
         <div className="flex flex-col">
@@ -53,48 +45,15 @@ export default function TodoApp() {
             </div>
 
             {/* todo component to add todo */}
-            <form>
-                <Label htmlFor='todoInput' className='text-xl'>Todo Form</Label>
-                <div className='flex mt-2'>
-                    <Input value={todo.label} onChange={onTodoChange} placeholder='write a todo...' id="todoInput" />
-                    <Button onClick={onTodoSubmit}>Add Todo</Button>
-                </div>
-            </form>
+            <TodoForm onSubmit={onTodoSubmit} />
 
 
             {/* todo list */}
-            <ul className='mt-6 flex flex-col gap-4'>
-                {todos.map((td) => {
-                    const todoId = `${td.label}-${td.updatedAt?.toLocaleString()}`
+           <TodoList todos={todos} onTodoDelete={onTodoDelete} onTodoTicked={onTodoTicked}/>
 
-                    return (
-                        <li key={todoId} className='flex justify-between'>
-                            <div className='flex gap-4'>
-                                <Checkbox id={todoId} onChange={onTodoTicked} className='h-8 w-8' />
-                                <Label htmlFor={todoId} className='text-lg text-gray-600'>{td.label}</Label>
-                                {/* <span>{dateFormatter(td.updatedAt)}</span> */}
-                            </div>
-                            <Button variant="destructive">delete</Button>
-                        </li>
-                    )
-                })}
-            </ul>
-
-            <div className="border-t-2 mt-8 pt-2">
-                <p className="text-green-600">Completed: {completedTodos}</p>
-            </div>
+            {/* todo stats for total, completed */}
+            <TodoStats todos={todos} />
+            
         </div>
     )
 }
-
-// function dateFormatter(dt: Date | null) {
-//     return new Intl.DateTimeFormat('en-US', {
-//         year: 'numeric',
-//         month: '2-digit',
-//         day: '2-digit',
-//         hour: '2-digit',
-//         minute: '2-digit',
-//         second: '2-digit',
-//         hour12: false
-//     }).format(dt)
-// }
